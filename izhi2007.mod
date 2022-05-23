@@ -78,13 +78,8 @@ ASSIGNED {
   :t0 : Previous time 
   factor : Voltage factor used for calculating the current
   eventflag : For diagnostic information
-}
-
-
-: State variables
-STATE {
-  V (mV) : Membrane voltage
-  u (mV) : Slow current/recovery variable
+  V : Membrane voltage
+  u : Slow current/recovery variable
   gAMPA : AMPA conductance
   gNMDA : NMDA conductance
   gGABAA : GABAA conductance
@@ -93,6 +88,7 @@ STATE {
   I : Total current
   delta : Time step
   t0 : Previous time  
+
 }
 
 

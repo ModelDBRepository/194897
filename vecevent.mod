@@ -32,7 +32,7 @@ NET_RECEIVE (w) {
 
 DESTRUCTOR {
 VERBATIM
-	void* vv = (void*)(_p_ptr);  
+	IvocVect* vv = (IvocVect*)(_p_ptr);
         if (vv) {
 		hoc_obj_unref(*vector_pobj(vv));
 	}
@@ -41,10 +41,10 @@ ENDVERBATIM
 
 PROCEDURE element() {
 VERBATIM	
-  { void* vv; int i, size; double* px;
+  { int i, size; double* px;
 	i = (int)index;
 	if (i >= 0) {
-		vv = (void*)(_p_ptr);
+		IvocVect* vv = (IvocVect*)(_p_ptr);
 		if (vv) {
 			size = vector_capacity(vv);
 			px = vector_vec(vv);
@@ -64,13 +64,12 @@ ENDVERBATIM
 
 PROCEDURE play() {
 VERBATIM
-	void** pv;
-	void* ptmp = NULL;
+	IvocVect* ptmp = (IvocVect*) NULL;
 	if (ifarg(1)) {
 		ptmp = vector_arg(1);
 		hoc_obj_ref(*vector_pobj(ptmp));
 	}
-	pv = (void**)(&_p_ptr);
+	IvocVect** pv = (IvocVect**)(&_p_ptr);
 	if (*pv) {
 		hoc_obj_unref(*vector_pobj(*pv));
 	}
