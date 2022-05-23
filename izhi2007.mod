@@ -125,9 +125,11 @@ PROCEDURE useverbose() { : Create user-accessible function
 }
 
 
+PROCEDURE states() {}
 
 : Define neuron dynamics
 BREAKPOINT {
+  SOLVE states
   delta = t-t0 : Find time difference
 
   : Receptor dynamics -- the correct form is gAMPA = gAMPA*exp(-delta/tauAMPA), but this is 30% slower and, in the end, not really any more physiologically realistic
