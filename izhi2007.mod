@@ -78,13 +78,12 @@ ASSIGNED {
   :t0 : Previous time 
   factor : Voltage factor used for calculating the current
   eventflag : For diagnostic information
-}
 
+  : State variables without ODEs / SOLVE block and hence converted
+  : to ASSIGN. See https://github.com/ModelDBRepository/194897/pull/2
 
-: State variables
-STATE {
-  V (mV) : Membrane voltage
-  u (mV) : Slow current/recovery variable
+  V : Membrane voltage
+  u : Slow current/recovery variable
   gAMPA : AMPA conductance
   gNMDA : NMDA conductance
   gGABAA : GABAA conductance
@@ -125,11 +124,8 @@ PROCEDURE useverbose() { : Create user-accessible function
 }
 
 
-PROCEDURE states() {}
-
 : Define neuron dynamics
 BREAKPOINT {
-  SOLVE states
   delta = t-t0 : Find time difference
 
   : Receptor dynamics -- the correct form is gAMPA = gAMPA*exp(-delta/tauAMPA), but this is 30% slower and, in the end, not really any more physiologically realistic
