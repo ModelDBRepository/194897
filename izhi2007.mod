@@ -78,13 +78,12 @@ ASSIGNED {
   :t0 : Previous time 
   factor : Voltage factor used for calculating the current
   eventflag : For diagnostic information
-}
 
+  : State variables without ODEs / SOLVE block and hence converted
+  : to ASSIGN. See https://github.com/ModelDBRepository/194897/pull/2
 
-: State variables
-STATE {
-  V (mV) : Membrane voltage
-  u (mV) : Slow current/recovery variable
+  V : Membrane voltage
+  u : Slow current/recovery variable
   gAMPA : AMPA conductance
   gNMDA : NMDA conductance
   gGABAA : GABAA conductance
@@ -123,7 +122,6 @@ PROCEDURE useverbose() { : Create user-accessible function
   strcpy(filename, gargstr(2)); // Copy input filename into memory
   ENDVERBATIM
 }
-
 
 
 : Define neuron dynamics
