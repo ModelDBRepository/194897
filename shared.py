@@ -1,5 +1,5 @@
 """
-globals.py 
+globals.py
 
 list of model objects (paramaters and variables) to be shared across modules
 Can modified manually or via arguments from main.py
@@ -19,7 +19,7 @@ import server # Server for plexon interface
 from time import time
 from math import radians
 import hashlib
-def id32(obj): return int(hashlib.md5(obj).hexdigest()[0:8],16)# hash(obj) & 0xffffffff # for random seeds (bitwise AND to retain only lower 32 bits)
+def id32(obj): return int(hashlib.md5(obj.encode("utf-8")).hexdigest()[0:8],16)# hash(obj) & 0xffffffff # for random seeds (bitwise AND to retain only lower 32 bits)
 
 
 ## MPI
@@ -27,7 +27,7 @@ pc = h.ParallelContext() # MPI: Initialize the ParallelContext class
 nhosts = int(pc.nhost()) # Find number of hosts
 rank = int(pc.id())     # rank 0 will be the master
 
-if rank==0: 
+if rank==0:
     pc.gid_clear()
     print('\nSetting parameters...')
 
@@ -41,7 +41,7 @@ scale = 8 # Size of simulation in thousands of cells
 popnames = ['PMd', 'ASC', 'EDSC', 'IDSC', 'ER2', 'IF2', 'IL2', 'ER5', 'EB5', 'IF5', 'IL5', 'ER6', 'IF6', 'IL6']
 popclasses =  [-1,  -1,     1,      4,     1,     5,     4,     1,     1,     5,     4,     1,     5,     4] # Izhikevich population type
 popEorI =     [ 0,   0,     0,      1,     0,     1,     1,     0,     0,     1,     1,     0,     1,     1] # Whether it's excitatory or inhibitory
-popratios =  [96,   64,    64,     64,   150,    25,    25,   168,    72,    40,    40,   192,    32,    32] # Cell population numbers 
+popratios =  [96,   64,    64,     64,   150,    25,    25,   168,    72,    40,    40,   192,    32,    32] # Cell population numbers
 popyfrac =   [[-1,-1], [-1,-1], [-1,-1], [-1,-1], [0.1,0.31], [0.1,0.31], [0.1,0.31], [0.31,0.52], [0.52,0.77], [0.31,0.77], [0.31,0.77], [0.77,1.0], [0.77,1.0], [0.77,1.0]] # data from Weiler et. al 2008 (updated from Ben's excel sheet)
 
 receptornames = ['AMPA', 'NMDA', 'GABAA', 'GABAB', 'opsin'] # Names of the different receptors
@@ -52,17 +52,17 @@ popGidEnd= [] # gid starts for each popnames
 popnumbers = []
 PMdinput = 'spikes' # 'Plexon', 'spikes', 'SSM', 'targetSplit'
 
-    
-# Define params for each cell: cellpops, cellnames, cellclasses, EorI 
+
+# Define params for each cell: cellpops, cellnames, cellclasses, EorI
 cellpops = [] # Store list of populations for each cell -- e.g. 1=ER2 vs. 2=IF2
 cellnames = [] # Store list of names for each cell -- e.g. 'ER2' vs. 'IF2'
 cellclasses = [] # Store list of classes types for each cell -- e.g. pyramidal vs. interneuron
 EorI = [] # Store list of excitatory/inhibitory for each cell
 popnumbers = scale*array(popratios) # Number of neurons in each population
-if PMdinput == 'Plexon' and 'PMd' in popnames:    
+if PMdinput == 'Plexon' and 'PMd' in popnames:
     popratios[popnames.index('PMd')] = server.numPMd
     popnumbers[popnames.index('PMd')] = server.numPMd # Number of PMds is fixed.
-ncells = int(sum(popnumbers))# Calculate the total number of cells 
+ncells = int(sum(popnumbers))# Calculate the total number of cells
 for c in range(len(popnames)):
     start = sum(popnumbers[:c])
     popGidStart.append(start)
@@ -73,23 +73,23 @@ for pop in range(npops): # Loop over each population
         cellnames.append(popnames[pop]) # Append this cell's population type to the list
         cellclasses.append(popclasses[pop]) # Just use integers to index them
         EorI.append(popEorI[pop]) # Append this cell's excitatory/inhibitory state to the list
-cellpops = array(cellpops) 
+cellpops = array(cellpops)
 cellnames = array(cellnames)
 EorI = array(EorI)
 
 
 # Assign numbers to each of the different variables so they can be used in the other functions
 # initializes the following variables:
-# ASC, EDSC, ER2, IF2, IL2, ER5, EB5, IF5, IL5, ER6, IF6, IL6, AMPA, NMDA, GABAA, GABAB, opsin, Epops, Ipops, allpops 
+# ASC, EDSC, ER2, IF2, IL2, ER5, EB5, IF5, IL5, ER6, IF6, IL6, AMPA, NMDA, GABAA, GABAB, opsin, Epops, Ipops, allpops
 for i,name in enumerate(popnames): exec(name+'=i') # Set population names to the integers
 for i,name in enumerate(receptornames): exec(name+'=i') # Set population names to the integers
-allpops = array(range(npops)) # Create an array with all the population numbers
+allpops = array(list(range(npops))) # Create an array with all the population numbers
 Epops = allpops[array(popEorI)==0] # Pick out numbers corresponding to excitatory populations
 Ipops = allpops[array(popEorI)==1] # Pick out numbers corresponding to inhibitory populations
 
 
 # for creating natural and artificial stimuli (need to import after init of population and receptor indices)
-from stimuli import touch, stimmod, makestim 
+from stimuli import touch, stimmod, makestim
 
 
 PMdconnprob = 2.0
@@ -105,14 +105,14 @@ connprobs[ER2,ER6]=0 # none by wiring matrix in (Weiler et al., 2008)
 connprobs[ER2,IL2]=0.51
 connprobs[ER2,IF2]=0.43
 connprobs[EB5,ER2]=0 # none by wiring matrix in (Weiler et al., 2008)
-connprobs[EB5,EB5]=0.04 * 4 # set using (Kiritani et al., 2012) Fig. 6D, Table 1, value x 4 
-connprobs[EB5,ER5]=0 # set using (Kiritani et al., 2012) Fig. 6D, Table 1 
+connprobs[EB5,EB5]=0.04 * 4 # set using (Kiritani et al., 2012) Fig. 6D, Table 1, value x 4
+connprobs[EB5,ER5]=0 # set using (Kiritani et al., 2012) Fig. 6D, Table 1
 connprobs[EB5,ER6]=0 # none by suggestion of Ben and Gordon over phone
 connprobs[EB5,IL5]=0 # ruled out by (Apicella et al., 2012) Fig. 7
 connprobs[EB5,IF5]=0.43 # CK: was 0.43 but perhaps the cause of the blow-up?
 connprobs[ER5,ER2]=0.2 # weak by wiring matrix in (Weiler et al., 2008)
 connprobs[ER5,EB5]=0.21 * 4 # set using (Kiritani et al., 2012) Fig. 6D, Table 1, value x 4
-connprobs[ER5,ER5]=0.11 * 4 # set using (Kiritani et al., 2012) Fig. 6D, Table 1, value x 4 
+connprobs[ER5,ER5]=0.11 * 4 # set using (Kiritani et al., 2012) Fig. 6D, Table 1, value x 4
 connprobs[ER5,ER6]=0.2 # weak by wiring matrix in (Weiler et al., 2008)
 connprobs[ER5,IL5]=0 # ruled out by (Apicella et al., 2012) Fig. 7
 connprobs[ER5,IF5]=0.43
@@ -124,7 +124,7 @@ connprobs[ER6,IL6]=0.51
 connprobs[ER6,IF6]=0.43
 connprobs[IL2,ER2]=0.35
 connprobs[IL2,IL2]=0.09
-connprobs[IL2,IF2]=0.53 
+connprobs[IL2,IF2]=0.53
 connprobs[IF2,ER2]=0.44
 connprobs[IF2,IL2]=0.34
 connprobs[IF2,IF2]=0.62
@@ -142,9 +142,9 @@ connprobs[IL6,IF6]=0.53
 connprobs[IF6,ER6]=0.44
 connprobs[IF6,IL6]=0.34
 connprobs[IF6,IF6]=0.62
-connprobs[ASC,ER2]=0.6 
+connprobs[ASC,ER2]=0.6
 connprobs[EB5,EDSC]=1.0 #0.6
-connprobs[EB5,IDSC]=0.0 # hard-wire so receives same input as EB5->EDSC 
+connprobs[EB5,IDSC]=0.0 # hard-wire so receives same input as EB5->EDSC
 connprobs[IDSC,EDSC]=0.0 # hard-wire so projects to antagonist muscle subpopulation
 connprobs[PMd,ER5]=PMdconnprob
 
@@ -199,7 +199,7 @@ connweights[IF6,IF6,GABAA]=1.5
 connweights[ASC,ER2,AMPA]=1.0
 connweights[EB5,EDSC,AMPA]=2.0
 connweights[EB5,IDSC,AMPA]=0.5
-connweights[IDSC,EDSC,GABAA]=1.0 
+connweights[IDSC,EDSC,GABAA]=1.0
 connweights[PMd,ER5,AMPA]=PMdconnweight
 
 
@@ -231,7 +231,7 @@ saveraw = False # Whether or not to record raw voltages etc.
 verbose = 0 # Whether to write nothing (0), diagnostic information on events (1), or everything (2) a file directly from izhi.mod
 filename = 'm1ms'  # Set file output name
 plotraster = False # Whether or not to plot a raster
-plotpeth = False # plot perievent time histogram 
+plotpeth = False # plot perievent time histogram
 plotpsd = False # plot power spectral density
 maxspikestoplot = 3e8 # Maximum number of spikes to plot
 plotconn = False # whether to plot conn matrix
@@ -273,7 +273,7 @@ timeoflastRL = -inf # Never RL
 stdpwin = 10 # length of stdp window (ms) (scholarpedia=10; Frem13=20(+),40(-))
 eligwin = 50 # length of RL eligibility window (ms) (Frem13=500ms)
 useRLexp = 0 # Use binary or exp decaying eligibility trace
-useRLsoft = 1 # Use soft thresholding 
+useRLsoft = 1 # Use soft thresholding
 maxweight = 8 # Maximum synaptic weight
 timebetweensaves = 5*1e3 # How many ms between saving weights(can't be smaller than loopstep)
 timeoflastsave = -inf # Never saved
@@ -295,9 +295,9 @@ backgroundreceptor = NMDA # Which receptor to stimulate
 useArm =  'dummyArm' # what type of arm to use: 'randomOutput', 'dummyArm' (simple python arm), 'musculoskeletal' (C++ full arm model)
 animArm = False # shows arm animation
 graphsArm = False # shows graphs (arm trajectory etc) when finisheds
-targetid = 1 # initial target 
+targetid = 1 # initial target
 minRLerror = 0.002 # minimum error change for RL (m)
-armLen = [0.4634 - 0.173, 0.7169 - 0.4634] # elbow - shoulder from MSM;radioulnar - elbow from MSM;  
+armLen = [0.4634 - 0.173, 0.7169 - 0.4634] # elbow - shoulder from MSM;radioulnar - elbow from MSM;
 nMuscles = 4 # number of muscles
 startAng = [0.62,1.53] # starting shoulder and elbow angles (rad) = natural rest position
 targetDist = 0.15 # target distance from center (15 cm)
@@ -305,16 +305,16 @@ targetDist = 0.15 # target distance from center (15 cm)
 initArmMovement = 250 # time after which to start moving arm (adds initial delay to avoid using initial burst of activity due to background noise init)
 motorCmdStartCell = popGidStart[EDSC] # start cell for motor command
 motorCmdEndCell = popGidStart[EDSC] + popnumbers[EDSC] # end cell for motor command
-if useArm == 'dummyArm': 
+if useArm == 'dummyArm':
     cmdmaxrate = scale*20.0 # maximum spikes for motor command (normalizing value)
     cmdmaxrateTest = scale*20.0 # maximum spikes for motor command (normalizing value)
-elif useArm == 'musculoskeletal': 
+elif useArm == 'musculoskeletal':
     cmdmaxrate = 8*scale*20.0 # maximum spikes for motor command (normalizing value 0 to 1)
     cmdmaxrateTest = 8*scale*20.0 # maximum spikes for motor command (normalizing value)
 cmdtimewin = 100 # spike time window for motor command (ms)
 antagInh = 0 # antagonist muscle inhibition
 # proprioceptive encoding
-pStart = popGidStart[ASC] 
+pStart = popGidStart[ASC]
 numPcells = popnumbers[ASC] # number of proprioceptive (P) cells to encode shoulder and elbow angles
 minPval = radians(-30) # min angle to encode
 maxPval = radians(135) # max angle to encode
@@ -334,7 +334,7 @@ trialReset = True # whether to reset the arm after every trial time
 timeoflastreset = 0 # time when arm was last reseted (start from center etc. to simulate trials)
 
 
-## PMd inputs 
+## PMd inputs
 if PMdinput == 'Plexon':
     vec = h.Vector() # temporary Neuron vectors
     emptyVec = h.Vector()
@@ -345,7 +345,7 @@ if PMdinput == 'targetSplit':
     targetPMdInputs = [] # PMd units active for each trial
     maxPMdRate = 100.0
     minPMdRate = 0.01
-    PMdNoiseRatio = 0.1  
+    PMdNoiseRatio = 0.1
 if PMdinput == 'spikes':
     pmdnc = []
     pmdncDic = {} # dictionary to relate global and local PMd netcons
@@ -373,7 +373,4 @@ if rank==0:
     benchstart = time()
     for i in range(int(1.36e6)): tmp=0 # Number selected to take 0.1 s on my machine
     performance = 1/(10*(time() - benchstart))*100
-    print('  Running at %0.0f%% default speed (%0.0f%% total)' % (performance, performance*nhosts))
-
-
-
+    print(('  Running at %0.0f%% default speed (%0.0f%% total)' % (performance, performance*nhosts)))
