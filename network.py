@@ -36,7 +36,6 @@ import shared as s # Import all shared variables and parameters
 import analysis
 from arm import Arm # Class with arm methods and variables
 
-import numpy as np
 
 ###############################################################################
 ### Sequences of commands to run full model
@@ -353,7 +352,7 @@ def createNetwork():
     nCells = s.motorCmdEndCell - s.motorCmdStartCell
     s.motorCmdCellRange = []
     for i in range(s.nMuscles):
-        s.motorCmdCellRange.append(list(np.arange(s.motorCmdStartCell + (nCells/s.nMuscles)*i, s.motorCmdStartCell + (nCells/s.nMuscles)*i + (nCells/s.nMuscles),dtype=int))) # cells used to for shoulder motor command
+        s.motorCmdCellRange.append(list(range(s.motorCmdStartCell + int(nCells/s.nMuscles)*i, s.motorCmdStartCell + int(nCells/s.nMuscles)*i + int(nCells/s.nMuscles)))) # cells used to for shoulder motor command
 
 
     ## Calculate distances and probabilities
@@ -867,7 +866,7 @@ def finalizeSim():
             hostspikecells=array([])
             hostspiketimes=array([])
             for c in range(len(s.hostspikevecs)): # fails when saving raw
-                thesespikes = array(s.hostspikevecs[c]) # Convert spike times to an array
+                thesespikes = array([s.hostspikevecs[c].x[i] for i in range(s.hostspikevecs[c].size())]) # Convert spike times to an array
                 nthesespikes = len(thesespikes) # Find out how many of spikes there were for this cell
                 hostspiketimes = concatenate((hostspiketimes, thesespikes)) # Add spikes from this cell to the list
                 #hostspikecells = concatenate((hostspikecells, (c+host*s.cellsperhost)*ones(nthesespikes))) # Add this cell's ID to the list
