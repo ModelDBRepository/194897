@@ -1,7 +1,7 @@
 """
 IZHI
 
-Python wrappers for the different celltypes of Izhikevich neuron. 
+Python wrappers for the different celltypes of Izhikevich neuron.
 
 Equations and parameter values taken from
   Izhikevich EM (2007).
@@ -10,7 +10,7 @@ Equations and parameter values taken from
 
 Equation for synaptic inputs taken from
   Izhikevich EM, Edelman GM (2008).
-  "Large-scale model of mammalian thalamocortical systems." 
+  "Large-scale model of mammalian thalamocortical systems."
   PNAS 105(9) 3593-3598.
 
 Cell types available are based on Izhikevich, 2007 book:
@@ -48,7 +48,7 @@ def createcell(section, C, k, vr, vt, vpeak, a, b, c, d, celltype, cellid):
     cell.d = d
     cell.celltype = celltype # Set cell celltype (used for setting celltype-specific dynamics)
     cell.cellid = cellid # Cell ID for keeping track which cell this is
-    cell.t0 = .0
+    #cell.t0 = .0
     return cell
 
 ## Cell types based on Izhikevich, 2007 book

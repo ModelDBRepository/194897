@@ -14,14 +14,14 @@ import logging
 from popen2 import popen2
 import pickle
 import multiprocessing
-import Queue
+import queue
 import subprocess
 
 ngen = -1 #global variable keeping number of generations
 
 ###############################################################################
 ### Simulation options
-###############################################################################  
+###############################################################################
 evolAlgorithm = 'evolutionStrategyCross' #'diffEvolution' # 'evolutionStrategy' #'krichmarCustom' #'genetic'#'particleSwarm100'#'estimationDist' #'diffEvolution' # 'evolutionStrategy' # 'krichmarCustom', 'genetic'
 simdatadir = '../data/16jul26_'+evolAlgorithm # folder to save sim results
 
@@ -31,7 +31,7 @@ musculoskeletalArm = 1 # need to know cause requires extra core
 max_migrants = 1 #
 migration_interval = 5
 pop_size = 10 # population size per island
-num_elites = pop_size/10 # num of top individuals kept each generation - maybe set to pop_size/10? 
+num_elites = pop_size/10 # num of top individuals kept each generation - maybe set to pop_size/10?
 max_generations = 2000
 max_evaluations = max_generations *  num_islands * pop_size
 targets_eval = [0] # center-out reaching target to evaluate
@@ -48,15 +48,15 @@ pNames.append('RLinterval'); pRanges.append([50,100])
 pNames.append('backgroundrate'); pRanges.append([50,150])
 pNames.append('explorMovsFactor'); pRanges.append([0.1,5])
 pNames.append('cmdmaxrate'); pRanges.append([500,2000])
-pNames.append('PMdconnweight'); pRanges.append([0.5,4]) 
-pNames.append('PMdconnprob'); pRanges.append([1,8]) 
+pNames.append('PMdconnweight'); pRanges.append([0.5,4])
+pNames.append('PMdconnprob'); pRanges.append([1,8])
 
 num_inputs = len(pNames)
 
 # evol specific params
-mutation_rate = 0.4 # only for custom EC  
+mutation_rate = 0.4 # only for custom EC
 crossover_rate = 0.2 # % of children with crossover
-ux_bias = round(0.1*num_inputs) 
+ux_bias = round(0.1*num_inputs)
 
 
 # Set bounds and allowed ranges for params
@@ -65,11 +65,11 @@ def bound_params(candidate, args = []):
     for i,p in enumerate(candidate):
         cBound.append(max(min(p, max(pRanges[i])), min(pRanges[i])))
 
-    # need to be integer 
+    # need to be integer
     cBound[0] = round(max(min(candidate[0], max(pRanges[0])), min(pRanges[0]))/1000.0)*1000.0 # round to 1000.0
     #cBound[1] = round(max(min(candidate[1], max(pRanges[1])), min(pRanges[1])))
     #cBound[10] = round(max(min(candidate[10], max(pRanges[10])), min(pRanges[10])))
-  
+
     # fixed values from list
     #param14 = min(param14_range, key=lambda x:abs(x-c[13]))
 
@@ -79,14 +79,14 @@ def bound_params(candidate, args = []):
 
 ###############################################################################
 ### Generate new set of random values for params
-###############################################################################  
+###############################################################################
 def generate_rastrigin(random, args):
     size = args.get('num_inputs', 10)
     paramsRand = []
     for iparam in range(len(pNames)):
         paramsRand.append(random.uniform(min(pRanges[iparam]),max(pRanges[iparam])))
 
-    # need to be integer 
+    # need to be integer
     paramsRand[0] = round(paramsRand[0]/1000.0)*1000.0
     #paramsRand[1] = round(paramsRand[1])
     #paramsRand[10] = round(paramsRand[10])
@@ -99,17 +99,17 @@ def generate_rastrigin(random, args):
 
 ###############################################################################
 ### Observer
-###############################################################################  
+###############################################################################
 def my_observer(population, num_generations, num_evaluations, args):
     #ngen=num_generations
     best = max(population)
-    print('{0:6} -- {1} : {2}'.format(num_generations, 
-                                      best.fitness, 
-                                      str(best.candidate)))
+    print(('{0:6} -- {1} : {2}'.format(num_generations,
+                                      best.fitness,
+                                      str(best.candidate))))
 
 ###############################################################################
 ### Custom mutator (nonuniform taking into account bounds)
-###############################################################################  
+###############################################################################
 @mutator
 def nonuniform_bounds_mutation(random, candidate, args):
     """Return the mutants produced by nonuniform mutation on the candidates.
@@ -117,11 +117,11 @@ def nonuniform_bounds_mutation(random, candidate, args):
        random -- the random number generator object
        candidate -- the candidate solution
        args -- a dictionary of keyword arguments
-    Required keyword arguments in args:       
-    Optional keyword arguments in args:    
+    Required keyword arguments in args:
+    Optional keyword arguments in args:
     - *mutation_strength* -- the strength of the mutation, where higher
       values correspond to greater variation (default 1)
-    
+
     """
     #bounder = args['_ec'].bounder
     #num_gens = args['_ec'].num_generations
@@ -141,12 +141,12 @@ def nonuniform_bounds_mutation(random, candidate, args):
 
 ###############################################################################
 ### Parallel evaluation
-###############################################################################   
+###############################################################################
 def parallel_evaluation_pbs(candidates, args):
     global ngen, targets_eval
     simdatadir = args.get('simdatadir') # load params
     ngen += 1 # increase number of generations
-    maxiter_wait=args.get('maxiter_wait',2000) # 
+    maxiter_wait=args.get('maxiter_wait',2000) #
     default_error=args.get('default_error',0.3)
 
     #run pbs jobs
@@ -155,8 +155,8 @@ def parallel_evaluation_pbs(candidates, args):
     for i, c in enumerate(candidates):
 
         outfilestem=simdatadir+"/gen_"+str(ngen)+"_cand_"+str(i) # set filename
-        for itarget in targets_eval:            
-            with open('%s_params'% (outfilestem), 'w') as f: # save current candidate params to file 
+        for itarget in targets_eval:
+            with open('%s_params'% (outfilestem), 'w') as f: # save current candidate params to file
                 pickle.dump(c, f)
             command = 'mpirun -machinefile %s/nodes%d -np %d nrniv -python -mpi main.py outfilestem="%s" targetid=%d'%(simdatadir, i+1, numproc, outfilestem, itarget) # set command to run
 
@@ -183,7 +183,7 @@ def parallel_evaluation_pbs(candidates, args):
 #SBATCH -e %s.err# Name of stderr output file
 #SBATCH --partition=compute    # submit to the 'large' queue for jobs > 256 nodes
 #SBATCH -J %s       # Job name
-#SBATCH -t %s            # Run time (hh:mm:ss) 
+#SBATCH -t %s            # Run time (hh:mm:ss)
 #SBATCH --mail-user=%s
 #SBATCH --mail-type=%s
 #SBATCH -A %s              # Allocation name to charge job against
@@ -225,14 +225,14 @@ awk 'NR==10 {print $0" slots=17"}' %s/nodeslist > %s/nodes10
 
 cd '/home/salvadord/m1ms/sim/'
 
-""" % (job_name, job_name, walltime, email, mailType, project, nodes, coresPerNode, simdatadir, 
+""" % (job_name, job_name, walltime, email, mailType, project, nodes, coresPerNode, simdatadir,
     simdatadir, simdatadir, simdatadir, simdatadir, simdatadir,
     simdatadir, simdatadir, simdatadir, simdatadir, simdatadir,
     simdatadir, simdatadir, simdatadir, simdatadir, simdatadir,
     simdatadir, simdatadir, simdatadir, simdatadir, simdatadir)
 
 
-    print job_string # print sbatch script
+    print(job_string) # print sbatch script
 
     batchfile = '%s/gen_%d.sbatch'%(simdatadir, ngen)
     with open(batchfile, 'w') as text_file:
@@ -252,10 +252,10 @@ cd '/home/salvadord/m1ms/sim/'
     jobs_completed=0
     while jobs_completed < total_jobs:
         #print outfilestem
-        print str(jobs_completed)+" / "+str(total_jobs)+" jobs completed"
+        print(str(jobs_completed)+" / "+str(total_jobs)+" jobs completed")
         unfinished = [[(i,j) for j,y in enumerate(x) if y is None] for i, x in enumerate(targetFitness)]
         unfinished = [item for sublist in unfinished for item in sublist]
-        print "unfinished:"+str(unfinished)
+        print("unfinished:"+str(unfinished))
         for (icand,itarget) in unfinished:
             # load error from file
             try:
@@ -264,29 +264,29 @@ cd '/home/salvadord/m1ms/sim/'
                     errorDic=pickle.load(f)
                     targetFitness[icand][itarget] = errorDic['errorFitness']
                     jobs_completed+=1
-                    print "icand:",icand," itarget:",itarget," error: "+str(errorDic['errorFitness'])
+                    print("icand:",icand," itarget:",itarget," error: "+str(errorDic['errorFitness']))
             except:
                 pass
             #print "Waiting for job: "+str(i)+" ... iteration:"+str(num_iters[i])
         num_iters+=1
-        if num_iters>=maxiter_wait: #or (num_iters>maxiter_wait/2 and jobs_completed>(0.95*total_jobs)): 
-            print "max iterations reached -- remaining jobs set to default error"
+        if num_iters>=maxiter_wait: #or (num_iters>maxiter_wait/2 and jobs_completed>(0.95*total_jobs)):
+            print("max iterations reached -- remaining jobs set to default error")
             for (icand,itarget) in unfinished:
                 targetFitness[icand][itarget] = default_error
                 jobs_completed+=1
         sleep(2) # sleep 2 seconds before checking agains
-    print targetFitness
+    print(targetFitness)
     try:
         fitness = [mean(x) for x in targetFitness]
-    except: 
+    except:
         fitness = [default_error for x in range(len(candidates))]
-    print 'fitness:',fitness
+    print('fitness:',fitness)
     return fitness
 
 
 ###############################################################################
 ### Multiprocessing Migration
-###############################################################################    
+###############################################################################
 class MultiprocessingMigratorNoBlock(object):
     """Migrate among processes on the same machine.
       remove lock
@@ -296,7 +296,7 @@ class MultiprocessingMigratorNoBlock(object):
         self.migration_interval = migration_interval
         self.migrants = multiprocessing.Queue(self.max_migrants)
         self.__name__ = self.__class__.__name__
-  
+
     def __call__(self, random, population, args):
         # only migrate every migrationInterval generations
         if (args["_ec"].num_generations % self.migration_interval)==0:
@@ -308,12 +308,12 @@ class MultiprocessingMigratorNoBlock(object):
                 if evaluate_migrant:
                     fit = args["_ec"].evaluator([migrant.candidate], args)
                     migrant.fitness = fit[0]
-                    args["_ec"].num_evaluations += 1     
-            except Queue.Empty:
+                    args["_ec"].num_evaluations += 1
+            except queue.Empty:
                 pass
             try:
                 self.migrants.put(old_migrant, block=False)
-            except Queue.Full:
+            except queue.Full:
                 pass
         return population
 
@@ -345,7 +345,7 @@ def setInitial(simdatadir):
     # set global variable to track number of gens to initial_gen
     ngen = initial_gen
 
-    print initial_gen, initial_cs, initial_fit
+    print(initial_gen, initial_cs, initial_fit)
     return initial_gen, initial_cs, initial_fit
 
 
@@ -353,14 +353,14 @@ def setInitial(simdatadir):
 ### Create islands
 ###############################################################################
 def create_island(rand_seed, island_number, mp_migrator, simdatadir, max_evaluations, max_generations, \
-    num_inputs, mutation_rate, crossover_rate, ux_bias, pop_size, num_elites):   
+    num_inputs, mutation_rate, crossover_rate, ux_bias, pop_size, num_elites):
     global num_islands
 
-    # create folder     
-    if num_islands > 1: 
+    # create folder
+    if num_islands > 1:
         simdatadir = simdatadir+'_island_'+str(i)
     mdir_str='mkdir %s' % (simdatadir)
-    os.system(mdir_str) 
+    os.system(mdir_str)
 
     # if individuals.csv already exists, continue from last generation
     if os.path.isfile(simdatadir+'/individuals.csv'): # disabled by adding '!!'
@@ -379,28 +379,28 @@ def create_island(rand_seed, island_number, mp_migrator, simdatadir, max_evaluat
     seedfile.write('{0}'.format(my_seed))
     seedfile.close()
     prng = Random()
-    prng.seed(my_seed) 
+    prng.seed(my_seed)
 
 
     # Custom algorithm based on Krichmar's params
     if evolAlgorithm == 'customEvol':
-        # a real-valued optimization algo- rithm called Evolution Strategies (De Jong, 2002) 
+        # a real-valued optimization algo- rithm called Evolution Strategies (De Jong, 2002)
         # was used with deterministic tournament selection, weak-elitism replacement, 40% Gaussian mutation and 50%
-        # crossover. Weak-elitism ensures the overall fitness monotonically increases each generation by replacing the 
-        # worst fitness individual of the offspring population with the best fitness individual of the parent population. 
+        # crossover. Weak-elitism ensures the overall fitness monotonically increases each generation by replacing the
+        # worst fitness individual of the offspring population with the best fitness individual of the parent population.
 
 
         ea = inspyred.ec.EvolutionaryComputation(prng)
         ea.selector = inspyred.ec.selectors.tournament_selection
-        ea.variator = [inspyred.ec.variators.uniform_crossover, nonuniform_bounds_mutation] 
+        ea.variator = [inspyred.ec.variators.uniform_crossover, nonuniform_bounds_mutation]
                        #inspyred.ec.variators.gaussian_mutation]
         ea.replacer = inspyred.ec.replacers.generational_replacement#inspyred.ec.replacers.plus_replacement
         #inspyred.ec.replacers.truncation_replacement (with num_selected=50)
         ea.terminator = inspyred.ec.terminators.generation_termination
         ea.observer = [inspyred.ec.observers.stats_observer, inspyred.ec.observers.file_observer]
-        final_pop = ea.evolve(generator=generate_rastrigin, 
+        final_pop = ea.evolve(generator=generate_rastrigin,
                               evaluator=parallel_evaluation_pbs,
-                              pop_size=pop_size, 
+                              pop_size=pop_size,
                               bounder=bound_params,
                               maximize=False,
                               max_evaluations=max_evaluations,
@@ -418,7 +418,7 @@ def create_island(rand_seed, island_number, mp_migrator, simdatadir, max_evaluat
                               initial_gen=initial_gen,
                               initial_cs=initial_cs,
                               initial_fit=initial_fit)
-    
+
     # Genetic
     elif evolAlgorithm == 'genetic':
         ea = inspyred.ec.GA(prng)
@@ -444,7 +444,7 @@ def create_island(rand_seed, island_number, mp_migrator, simdatadir, max_evaluat
         if num_islands > 1: ea.migrator = mp_migrator
         ea.terminator = inspyred.ec.terminators.generation_termination
         ea.observer = [inspyred.ec.observers.stats_observer, inspyred.ec.observers.file_observer]
-        final_pop = ea.evolve(generator=generate_rastrigin, 
+        final_pop = ea.evolve(generator=generate_rastrigin,
                             evaluator=parallel_evaluation_pbs,
                             pop_size=pop_size,
                             bounder=bound_params,
@@ -468,7 +468,7 @@ def create_island(rand_seed, island_number, mp_migrator, simdatadir, max_evaluat
         ea.variator = [inspyred.ec.variators.uniform_crossover, ea._internal_variation]
         ea.terminator = inspyred.ec.terminators.generation_termination
         ea.observer = [inspyred.ec.observers.stats_observer, inspyred.ec.observers.file_observer]
-        final_pop = ea.evolve(generator=generate_rastrigin, 
+        final_pop = ea.evolve(generator=generate_rastrigin,
                             evaluator=parallel_evaluation_pbs,
                             pop_size=pop_size,
                             bounder=bound_params,
@@ -485,7 +485,7 @@ def create_island(rand_seed, island_number, mp_migrator, simdatadir, max_evaluat
                             initial_cs=initial_cs,
                             initial_fit=initial_fit)
 
-    
+
 
     # Simulated Annealing
     elif evolAlgorithm == 'simulatedAnnealing':
@@ -590,8 +590,8 @@ def create_island(rand_seed, island_number, mp_migrator, simdatadir, max_evaluat
 
 
 
-    best = max(final_pop) 
-    print('Best Solution: \n{0}'.format(str(best)))
+    best = max(final_pop)
+    print(('Best Solution: \n{0}'.format(str(best))))
 
     return ea
 
@@ -600,10 +600,10 @@ def create_island(rand_seed, island_number, mp_migrator, simdatadir, max_evaluat
 ### Main - logging, island model params, launch multiprocessing
 ###############################################################################
 if __name__ == '__main__':
-    # create folder    
+    # create folder
     mdir_str='mkdir -p %s' % (simdatadir)
-    os.system(mdir_str) 
-    
+    os.system(mdir_str)
+
     # debug info
     logger = logging.getLogger('inspyred.ec')
     logger.setLevel(logging.DEBUG)
@@ -611,7 +611,7 @@ if __name__ == '__main__':
     file_handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)    
+    logger.addHandler(file_handler)
 
     # run single population or multiple islands
     rand_seed = int(time())

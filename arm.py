@@ -4,7 +4,7 @@ MSARM
 Code to connect a virtual arm to the M1 model
 Multipe arm options depending on self.type:
 - 'randomInput': the object provides random values matching the format (used for test/debugging)
-- 'dummyArm': simple kinematic arm implemented in python 
+- 'dummyArm': simple kinematic arm implemented in python
 - 'musculoskeletal': realistic musculoskeletal arm implemented in C++ and interfaced via pipes
 
 Adapted from arm.hoc in arm2dms
@@ -24,7 +24,7 @@ from random import uniform, seed, sample, randint
 [SH,EL] = [X,Y] = [0,1]
 [SH_EXT, SH_FLEX, EL_EXT, EL_FLEX] = [0,1,2,3]
 
-  
+
 class Arm:
     #%% init
     def __init__(self, type, anim, graphs): # initialize variables
@@ -43,19 +43,19 @@ class Arm:
         y = armPos[1]
         l1 = armLen[0]
         l2 = armLen[1]
-        elang = abs(2*arctan(sqrt(((l1 + l2)**2 - (x**2 + y**2))/((x**2 + y**2) - (l1 - l2)**2)))); 
-        phi = arctan2(y,x); 
+        elang = abs(2*arctan(sqrt(((l1 + l2)**2 - (x**2 + y**2))/((x**2 + y**2) - (l1 - l2)**2))));
+        phi = arctan2(y,x);
         psi = arctan2(l2 * sin(elang), l1 + (l2 * cos(elang)));
-        shang = phi - psi; 
+        shang = phi - psi;
         return [shang,elang]
 
     # convert joint angles to cartesian position
-    def angles2pos(self, armAng, armLen):        
+    def angles2pos(self, armAng, armLen):
         elbowPosx = armLen[0] * cos(armAng[0]) # end of elbow
         elbowPosy = armLen[0] * sin(armAng[0])
         wristPosx = elbowPosx + armLen[1] * cos(+armAng[0]+armAng[1]) # wrist=arm position
         wristPosy = elbowPosy + armLen[1] * sin(+armAng[0]+armAng[1])
-        return [wristPosx,wristPosy] 
+        return [wristPosx,wristPosy]
 
     #%% setTargetByID
     def setTargetByID(self, id, startAng, targetDist, armLen):
@@ -114,12 +114,12 @@ class Arm:
             self.error = 0 # error signal (eg. difference between )
             self.critic = 0 # critic signal (1=reward; -1=punishment)
             self.initArmMovement = self.initArmMovement + s.testTime
-        
+
 
     def setPMdInput(self, s):
         for c in range(0, s.popnumbers[s.PMd], 2):
-            try: 
-                gid = s.popGidStart[s.PMd] + c # find gid of PMd 
+            try:
+                gid = s.popGidStart[s.PMd] + c # find gid of PMd
                 lid = s.gidDic[gid] # find local index corresponding to gid
                 if (gid in s.targetPMdInputs[s.targetid]):  # if gid in PMdinputs for this target
                     #print "yes:",gid
@@ -140,22 +140,22 @@ class Arm:
                 diff = self.error - mean(self.errorAll[-RLsteps:-1]) # difference between error at t and at t-(RLdt/dt) eg. t-50/5 = t-10steps
             else:
                 diff = 0
-            if diff < -self.minRLerror: # if error negative: LTP 
+            if diff < -self.minRLerror: # if error negative: LTP
                 self.critic = 1 # return critic signal to model.py so can update synaptic weights
             elif diff > self.minRLerror: # if error positive: LTD
                 self.critic = -1
             else: # if difference not significant: no weight change
                 self.critic = 0
-        else: # if 
+        else: # if
             self.critic = 0
         return self.critic
 
     #%% plot joint angles
     def plotTraj(self, filename):
-        fig = figure() 
+        fig = figure()
         l = 1.1*sum(self.armLen)
         ax = fig.add_subplot(111, autoscale_on=False, xlim=(-l/2, +l), ylim=(-l/2, +l)) # create subplot
-        posX, posY = zip(*[self.angles2pos([x[SH],x[EL]], self.armLen) for x in self.angAll])
+        posX, posY = list(zip(*[self.angles2pos([x[SH],x[EL]], self.armLen) for x in self.angAll]))
         ax.plot(posX, posY, 'r')
         targ = Circle((self.targetPos),0.04, color='g', fill=False) # target
         ax.add_artist(targ)
@@ -163,12 +163,12 @@ class Arm:
         ax.set_title('X-Y Hand trajectory')
         xlabel('x')
         ylabel('y')
-        print 'saving '+filename
+        print('saving '+filename)
         fig.savefig(filename)
 
     #%% plot joint angles
     def plotAngs(self):
-        fig = figure() 
+        fig = figure()
         ax = fig.add_subplot(111) # create subplot
         sh = [x[SH] for x in self.angAll]
         el = [x[EL] for x in self.angAll]
@@ -176,8 +176,8 @@ class Arm:
         ax.plot(el, 'b', label='elbow')
         shTarg = self.pos2angles(self.targetPos, self.armLen)[0]
         elTarg = self.pos2angles(self.targetPos, self.armLen)[1]
-        ax.plot(range(0,len(sh)), [shTarg] * len(sh), 'r:', label='sh target')
-        ax.plot(range(0,len(el)), [elTarg] * len(el), 'b:', label='el target')
+        ax.plot(list(range(0,len(sh))), [shTarg] * len(sh), 'r:', label='sh target')
+        ax.plot(list(range(0,len(el))), [elTarg] * len(el), 'b:', label='el target')
         ax.set_title('Joint angles')
         xlabel('time')
         ylabel('angle')
@@ -185,7 +185,7 @@ class Arm:
 
     #%% plot motor commands
     def plotMotorCmds(self):
-        fig = figure() 
+        fig = figure()
         ax = fig.add_subplot(111) # create subplot
         shext = [x[SH_EXT] for x in self.motorCmdAll]
         elext = [x[EL_EXT] for x in self.motorCmdAll]
@@ -202,7 +202,7 @@ class Arm:
 
     #%% plot RL critic signal and error
     def plotRL(self):
-        fig = figure() 
+        fig = figure()
         ax = fig.add_subplot(111) # create subplot
         ax.plot(self.errorAll, 'r', label='error')
         ax.plot((array(self.criticAll)+1.0) * max(self.errorAll) / 2.0, 'b', label='RL critic')
@@ -214,12 +214,12 @@ class Arm:
     ################################
     ### SETUP
     ################################
-    def setup(self, s):#, nduration, loopstep, RLinterval, pc, scale, popnumbers, p): 
+    def setup(self, s):#, nduration, loopstep, RLinterval, pc, scale, popnumbers, p):
         self.duration = s.duration#/1000.0 # duration in msec
-        self.interval = s.loopstep#/1000.0 # interval between arm updates in ,sec       
+        self.interval = s.loopstep#/1000.0 # interval between arm updates in ,sec
         self.RLinterval = s.RLinterval # interval between RL updates in msec
         self.minRLerror = s.minRLerror # minimum error change for RL (m)
-        self.armLen = s.armLen # elbow - shoulder from MSM;radioulnar - elbow from MSM;  
+        self.armLen = s.armLen # elbow - shoulder from MSM;radioulnar - elbow from MSM;
         self.handPos = [0,0] # keeps track of hand (end-effector) x,y position
         self.handPosAll = [] # list with all handPos
         self.handVel = [0,0] # keeps track of hand (end-effector) x,y velocity
@@ -267,11 +267,11 @@ class Arm:
             currentPval += angInterval
 
 
-        # initialize dummy or musculoskeletal arm 
-        if s.rank == 0: 
-            if self.type == 'dummyArm': 
+        # initialize dummy or musculoskeletal arm
+        if s.rank == 0:
+            if self.type == 'dummyArm':
                 self.setupDummyArm() # setup dummyArm (eg. graph animation)
-            elif self.type == 'musculoskeletal':  
+            elif self.type == 'musculoskeletal':
                 damping = 1 # damping of muscles (.osim parameter)
                 shExtGain = 2  # gain factor to multiply force of shoulder extensor muscles (.osim parameter)
                 shFlexGain = 1 # gain factor to multiply force of shoulder flexor muscles (.osim parameter)
@@ -279,18 +279,18 @@ class Arm:
                 elFlexGain = 0.8 # gain factor to multiply force of elbox flexor muscles (.osim parameter)
                 # call function to initialize virtual arm params and run virtual arm C++ executable
                 arminterface.setup(self.duration/1000.0, self.interval, self.startAng[SH], self.startAng[EL], self.targetPos[X], self.targetPos[Y], damping, shExtGain, shFlexGain, elExtGain, elFlexGain)
-        
+
         # set PMd inputs
-        if s.PMdinput == 'targetSplit': 
+        if s.PMdinput == 'targetSplit':
             self.setPMdInput(s) # set PMd inputs
 
-    ################################          
-    ### RUN     
     ################################
-    def run(self, t, s): #pc, cells, gidVec, gidDic, cellsperhost=[], hostspikevecs=[]): 
+    ### RUN
+    ################################
+    def run(self, t, s): #pc, cells, gidVec, gidDic, cellsperhost=[], hostspikevecs=[]):
 
         # Append to list the the value of relevant variables for this time step (only worker0)
-        if s.rank == 0:     
+        if s.rank == 0:
             self.handPosAll.append(list(self.handPos)) # list with all handPos
             self.handVelAll.append(list(self.handVel))  # list with all handVel
             self.angAll.append(list(self.ang)) # list with all ang
@@ -303,7 +303,7 @@ class Arm:
         ############################
         # dummyArm or musculoskeletal: gather spikes for motor command
         ############################
-        if self.type == 'dummyArm' or self.type == 'musculoskeletal': 
+        if self.type == 'dummyArm' or self.type == 'musculoskeletal':
             ## Exploratory movements
             if s.explorMovs and t-s.timeoflastexplor >= self.randDur: # if time to update exploratory movement
                 seed(s.id32('%d'%(int(t)+s.randseed))) # init seed
@@ -313,7 +313,7 @@ class Arm:
                 s.timeoflastexplor = t
 
                 if s.explorMovs == 1: # add random noise to EDSC+IDSC population
-                    IDSCgids = array(s.motorCmdCellRange[self.randMus]) - int(s.popGidStart[s.EDSC]) + int(s.popGidStart[s.IDSC]) 
+                    IDSCgids = array(s.motorCmdCellRange[self.randMus]) - int(s.popGidStart[s.EDSC]) + int(s.popGidStart[s.IDSC])
                     IDSCgidsInverse = [j for j in range(s.popGidStart[s.IDSC],s.popGidEnd[s.IDSC]+1) if j not in list(IDSCgids)]
                     for (i,x) in enumerate(s.backgroundsources): # for all background input netstims
                         if s.backgroundgid[i] in s.motorCmdCellRange[self.randMus] or s.backgroundgid[i] in list(IDSCgids): # if connected to chosen muscle cells
@@ -322,12 +322,12 @@ class Arm:
                         elif s.backgroundgid[i] in [y for z in range(s.nMuscles) if z != self.randMus for y in s.motorCmdCellRange[z]+IDSCgidsInverse]:
                             x.interval = s.backgroundrateMin**-1*1e3 # otherwise set to minimum
                     #if s.rank==0: print 'exploratory movement, randMus',self.randMus,' strength:',self.randMul,' duration:', self.randDur
-                    #print 'IDSC cells:', IDSCgids   
+                    #print 'IDSC cells:', IDSCgids
                     #print 'IDSC inverse cells:', IDSCgidsInverse
 
-                
+
                 elif s.explorMovs == 2: # add random noise to EB5 population
-                    self.targetCells = range(s.popGidStart[s.EB5], s.popGidEnd[s.EB5]+1) # EB5 cell gids
+                    self.targetCells = list(range(s.popGidStart[s.EB5], s.popGidEnd[s.EB5]+1)) # EB5 cell gids
                     self.randNumCells = randint(1, int(s.explorCellsFraction*len(self.targetCells))) # num of cells to stimumales
                     self.randCells = sample(self.targetCells, int(self.randNumCells)) # select random gids
                     for (i,x) in enumerate(s.backgroundsources):  # for all input background netstims
@@ -335,34 +335,34 @@ class Arm:
                             x.interval = s.backgroundrateExplor**-1*1e3  # increase input
                         elif s.backgroundgid[i] in [y for y in self.targetCells if y not in self.randCells]:  # for the rest of cells
                             x.interval = s.backgroundrateMin**-1*1e3  # set to normal level
-                    #if s.rank==0: 
-                    #print 'Nodes:', s.rank,' - exploratory movement, numcells:',self.randNumCells,' strength:',self.randMul,' duration:', self.randDur, 'cells:', self.randCells    
+                    #if s.rank==0:
+                    #print 'Nodes:', s.rank,' - exploratory movement, numcells:',self.randNumCells,' strength:',self.randMul,' duration:', self.randDur, 'cells:', self.randCells
 
 
             ## Reset arm and set target after every trial -start from center etc
-            if s.trialReset and t-s.timeoflastreset > s.testTime: 
+            if s.trialReset and t-s.timeoflastreset > s.testTime:
                 self.resetArm(s, t)
                 s.targetid = s.trialTargets[self.trial] # set target based on trial number
-                self.targetPos = self.setTargetByID(s.targetid, self.startAng, self.targetDist, self.armLen) 
+                self.targetPos = self.setTargetByID(s.targetid, self.startAng, self.targetDist, self.armLen)
                 if s.PMdinput == 'targetSplit': self.setPMdInput(s)
 
 
             ## Only move after initial period - avoids initial transitory spiking period (NSLOC sync spikes), and allows for variables with history to clear
             # can be justified as preparatory period (eg. watiing for go cue)
             if t > self.initArmMovement:
-                ## Gather spikes #### from all vectors to then calculate motor command 
+                ## Gather spikes #### from all vectors to then calculate motor command
                 for i in range(s.nMuscles):
                     cmdVecs = [array(s.hostspikevecs[x]) for x in range(s.cellsperhost) if (s.gidVec[x] in s.motorCmdCellRange[i])]
                     self.motorCmd[i] = sum([len(x[(x < t) * (x > t-self.cmdtimewin)]) for x in cmdVecs])
                     s.pc.allreduce(self.vec.from_python([self.motorCmd[i]]), 1) # sum
-                    self.motorCmd[i] = self.vec.to_python()[0]       
+                    self.motorCmd[i] = self.vec.to_python()[0]
             # else:
             #     for i in range(s.nMuscles): # stimulate all muscles equivalently so arm doesnt move
             #         self.motorCmd[i] = 0.2 * self.cmdmaxrate
 
-                ## Calculate final motor command 
-                if s.rank==0:  
-                    self.motorCmd = [x / self.cmdmaxrate for x in self.motorCmd]  # normalize motor command 
+                ## Calculate final motor command
+                if s.rank==0:
+                    self.motorCmd = [x / self.cmdmaxrate for x in self.motorCmd]  # normalize motor command
                     if s.antagInh: # antagonist inhibition
                         if self.motorCmd[SH_EXT] > self.motorCmd[SH_FLEX]: # sh ext > sh flex
                             self.motorCmd[SH_FLEX] =  self.motorCmd[SH_FLEX]**2 / self.motorCmd[SH_EXT] / s.antagInh
@@ -372,7 +372,7 @@ class Arm:
                             self.motorCmd[EL_FLEX] = self.motorCmd[EL_FLEX]**2 / self.motorCmd[EL_EXT] / s.antagInh
                         elif self.motorCmd[EL_EXT] < self.motorCmd[EL_FLEX]: # el ext > el flex
                             self.motorCmd[EL_EXT] = self.motorCmd[EL_EXT]**2 / self.motorCmd[EL_FLEX] / s.antagInh
-             
+
 
         ############################
         # ALL arms: Send motor command to virtual arm; receive new position; update proprioceptive population (ASC)
@@ -387,29 +387,29 @@ class Arm:
                     dataReceived = [self.ang[SH], self.ang[EL]]
                 if not dataReceived or dataReceived==[-3,3]:  # if error receiving packet
                     dataReceived = [self.ang[SH], self.ang[EL]]  # use previous packet
-                    print 'Missed packet at t=%.2f',t
+                    print('Missed packet at t=%.2f',t)
             elif self.type == 'dummyArm': # DUMMYARM
                 dataReceived = self.runDummyArm(self.motorCmd) # run dummyArm
             elif self.type == 'randomOutput': # RANDOMOUTPUT
-                dataReceived = [0,0] 
-                dataReceived[0] = uniform(self.minPval, self.maxPval) # generate 2 random values  
-                dataReceived[1] = uniform(self.minPval, self.maxPval)  
-            # broadcast dataReceived  to other workers.   
+                dataReceived = [0,0]
+                dataReceived[0] = uniform(self.minPval, self.maxPval) # generate 2 random values
+                dataReceived[1] = uniform(self.minPval, self.maxPval)
+            # broadcast dataReceived  to other workers.
             n = s.pc.broadcast(self.vec.from_python(dataReceived), 0) # convert python list to hoc vector for broadcast data received from arm
         else: # other workers
             n = s.pc.broadcast(self.vec, 0)  # receive shoulder and elbow angles from worker0 so can compare with cells in this worker
-            dataReceived = self.vec.to_python()  
+            dataReceived = self.vec.to_python()
         if self.type == 'musculoskeletal':
             [self.ang[SH], self.ang[EL]] = dataReceived
-            self.handPos = self.angles2pos(self.ang, self.armLen) 
-            self.angVel[SH] = self.angVel[EL] = 0 
+            self.handPos = self.angles2pos(self.ang, self.armLen)
+            self.angVel[SH] = self.angVel[EL] = 0
         else:
             [self.ang[SH], self.ang[EL], self.angVel[SH], self.angVel[EL], self.handPos[SH], self.handPos[EL]] = dataReceived # map data received to shoulder and elbow angles
-        #[self.ang[SH], self.ang[EL], self.angVel[SH], self.angVel[EL]] = dataReceived # map data received to shoulder and elbow angles      
-        
+        #[self.ang[SH], self.ang[EL], self.angVel[SH], self.angVel[EL]] = dataReceived # map data received to shoulder and elbow angles
+
         #### Update proprio pop ASC
         for c in range(0, self.numPcells, 2):
-            try: 
+            try:
                 id = s.gidDic[self.pStart + c] # find local index corresponding to gid
                 if (self.ang[SH] >= self.prange[c,0] and self.ang[SH] < self.prange[c,1]):  # in angle in range -> high firing rate
                     s.cells[id].interval=1000/self.maxPrate # interval in ms as a function of rate
@@ -417,35 +417,35 @@ class Arm:
                     s.cells[id].interval=1000/self.minPrate # interval in ms as a function of rate
             except:
                 pass # local index corresponding to gid not found in this node
-            try: 
+            try:
                 id = s.gidDic[self.pStart + c + 1] # find local index corresponding to gid
                 if (self.ang[EL] >= self.prange[c+1,0] and self.ang[EL] < self.prange[c+1,1]):  # in angle in range -> high firing rate
                     s.cells[id].interval=1000/self.maxPrate # interval in ms as a function of rate
                 else: # if angle not in range -> low firing rate
-                    s.cells[id].interval=1000/self.minPrate # interval in ms as a function of rate 
+                    s.cells[id].interval=1000/self.minPrate # interval in ms as a function of rate
             except:
                 pass # local index corresponding to gid not found in this node
 
 
-        #### Calculate error between hand and target for interval between RL updates 
+        #### Calculate error between hand and target for interval between RL updates
         if s.rank == 0 and self.initArmMovement: # do not update between trials
             #print 't=%.2f, xpos=%.2f'%(t,self.targetPos[X])
             self.error = sqrt((self.handPos[X] - self.targetPos[X])**2 + (self.handPos[Y] - self.targetPos[Y])**2)
-            
+
         return self.critic
 
 
     ################################
     ### CLOSE
     ################################
-    def close(self, s):             
+    def close(self, s):
         if self.type == 'randomOutput':
             print('\nClosing random output virtual arm...')
 
         if self.type == 'dummyArm':
             if s.explorMovs == 1: # remove explor movs related noise to cells
                 for imus in range(s.nMuscles):
-                    IDSCgids = array(s.motorCmdCellRange[self.randMus]) - int(s.popGidStart[s.EDSC]) + int(s.popGidStart[s.IDSC]) 
+                    IDSCgids = array(s.motorCmdCellRange[self.randMus]) - int(s.popGidStart[s.EDSC]) + int(s.popGidStart[s.IDSC])
                     for (i,x) in enumerate(s.backgroundsources):
                         if s.backgroundgid[i] in s.motorCmdCellRange[imus]+list(IDSCgids):
                             x.interval = 0.0001**-1*1e3
@@ -460,21 +460,21 @@ class Arm:
                 self.initArmMovement = int(s.initArmMovement)
 
             if s.rank == 0:
-                print('\nClosing dummy virtual arm ...') 
+                print('\nClosing dummy virtual arm ...')
 
                 if self.anim:
                     ioff() # turn interactive mode off
-                    close(self.fig) # close arm animation graph 
+                    close(self.fig) # close arm animation graph
                 if self.graphs: # plot graphs
                     self.plotTraj(s.filename)
                     #self.plotAngs()
                     #self.plotMotorCmds()
                     #self.plotRL()
-        
+
         if self.type == 'musculoskeletal':
             if s.explorMovs == 1: # remove explor movs related noise to cells
                 for imus in range(s.nMuscles):
-                    IDSCgids = array(s.motorCmdCellRange[self.randMus]) - int(s.popGidStart[s.EDSC]) + int(s.popGidStart[s.IDSC]) 
+                    IDSCgids = array(s.motorCmdCellRange[self.randMus]) - int(s.popGidStart[s.EDSC]) + int(s.popGidStart[s.IDSC])
                     for (i,x) in enumerate(s.backgroundsources):
                         if s.backgroundgid[i] in s.motorCmdCellRange[imus]+list(IDSCgids):
                             x.interval = 0.0001**-1*1e3
@@ -489,7 +489,7 @@ class Arm:
                 self.initArmMovement = int(s.initArmMovement)
 
             if s.rank == 0:
-                print('\nClosing dummy virtual arm ...') 
+                print('\nClosing dummy virtual arm ...')
                 arminterface.closeSavePlot(self.duration/1000.0, self.interval)
 
                 if self.graphs: # plot graphs
@@ -497,8 +497,3 @@ class Arm:
                     #self.plotAngs()
                     self.plotMotorCmds()
                     self.plotRL()
-        
-
-
-    
-    
