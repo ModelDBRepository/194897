@@ -39,7 +39,7 @@ ENDCOMMENT
 : Declare name of object and variables
 NEURON {
   POINT_PROCESS Izhi2007
-  RANGE C, k, vr, vt, vpeak, a, b, c, d, Iin, Vpre, tauAMPA, tauNMDA, tauGABAA, tauGABAB, tauOpsin, celltype, alive, cellid, verbose
+  RANGE C, k, vr, vt, vpeak, a, b, c, d, Iin, Vpre, tauAMPA, tauNMDA, tauGABAA, tauGABAB, tauOpsin, celltype, alive, cellid, verbose, t0
 }
 
 : Specify units that have physiological interpretations (NB: ms is already declared)
