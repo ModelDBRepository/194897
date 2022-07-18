@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use('Agg') # needed for hpc batch sims
+# matplotlib.use('Agg') # needed for hpc batch sims
 
 import sys
 from numpy import mean, zeros
