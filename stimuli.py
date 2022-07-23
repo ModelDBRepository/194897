@@ -50,7 +50,7 @@ class opto:
 
 # Allow defaults to be overriden by name, e.g. instead of touch(), stimmod(touch,sta=1,fin=3)
 def stimmod(stimclass, name=None, receptor=None, isi=None, var=None, width=None, weight=None, sta=None, fin=None, shape=None, pops=None, fraction=None, rate=None, noise=None, loc=None, falloff=None):
-    stiminstance = stimclass()    
+    stiminstance = stimclass()
     stimproperties = ['name', 'receptor', 'isi', 'var', 'width', 'weight', 'sta', 'fin', 'shape', 'pops', 'fraction', 'rate', 'noise', 'loc', 'falloff'];
     for prop in stimproperties:
         thisproperty = eval(prop)
@@ -62,7 +62,7 @@ def stimmod(stimclass, name=None, receptor=None, isi=None, var=None, width=None,
 ## Define stimulus-making code
 def makestim(isi=1, variation=0, width=0.05, weight=10, start=0, finish=1, stimshape='gaussian'):
     from pylab import r_, convolve, shape
-    
+
     # Create event times
     timeres = 0.005 # Time resolution = 5 ms = 200 Hz
     pulselength = 10 # Length of pulse in units of width
@@ -73,19 +73,19 @@ def makestim(isi=1, variation=0, width=0.05, weight=10, start=0, finish=1, stims
     while currenttime<timewindow:
         if currenttime>=0 and currenttime<timewindow: output.append(currenttime)
         currenttime = currenttime+isi+variation*(rand()-0.5)
-    
+
     # Create single pulse
     npts = min(pulselength*width/timeres,allpts) # Calculate the number of points to use
     x = (r_[0:npts]-npts/2+1)*timeres
-    if stimshape=='gaussian': 
+    if stimshape=='gaussian':
         pulse = exp(-(x/width*2-2)**2) # Offset by 2 standard deviations from start
         pulse = pulse/max(pulse)
-    elif stimshape=='square': 
+    elif stimshape=='square':
         pulse = zeros(shape(x))
         pulse[int(npts/2):int(npts/2)+int(width/timeres)] = 1 # Start exactly on time
     else:
         raise Exception('Stimulus shape "%s" not recognized' % stimshape)
-    
+
    # Create full stimulus
     events = zeros((allpts))
     events[array(array(output)/timeres,dtype=int)] = 1
@@ -95,5 +95,5 @@ def makestim(isi=1, variation=0, width=0.05, weight=10, start=0, finish=1, stims
     fulloutput = hstack((0,fulloutput,0)) # Set weight to zero at either end of the stimulus period
     events = hstack((0,events,0)) # Ditto
     stimvecs = [fulltime, fulloutput, events] # Combine vectors into a matrix
-    
+
     return stimvecs

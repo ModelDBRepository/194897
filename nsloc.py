@@ -3,7 +3,7 @@ NLSOC
 
 Usage example:
     from neuron import h
-    from nsloc import nsloc 
+    from nsloc import nsloc
     cell = nsloc(cellid)
 
 Version: 2014July23 by salvadordura@gmail.com
